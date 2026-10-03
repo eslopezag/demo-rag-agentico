@@ -1,0 +1,32 @@
+# Base de datos de la tienda para la demostración.
+#
+#   docker compose up -d        crea y carga la base (la primera vez tarda unos segundos)
+#   docker compose down         la apaga; los datos se conservan
+#   docker compose down -v      la borra; el próximo "up" la vuelve a cargar desde cero
+#
+# Conexión: postgresql://tienda:tienda@localhost:5432/tienda
+# Si el puerto 5432 ya está ocupado: PUERTO_BD=5433 docker compose up -d
+# (y ajusten URL_BD en el archivo .env).
+services:
+  postgres:
+    image: postgres:17
+    container_name: tienda-postgres
+    environment:
+      POSTGRES_USER: tienda
+      POSTGRES_PASSWORD: tienda
+      POSTGRES_DB: tienda
+      TZ: America/Bogota
+      PGTZ: America/Bogota
+    ports:
+      - "${PUERTO_BD:-5432}:5432"
+    volumes:
+      - ./init:/docker-entrypoint-initdb.d:ro
+      - datos_tienda:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tienda -d tienda"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  datos_tienda:
